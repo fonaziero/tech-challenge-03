@@ -1,98 +1,124 @@
+import 'package:bytebank/components/abrir_conta_dialog.dart';
+import 'package:bytebank/components/login.dart';
+import 'package:bytebank/firebase_options.dart';
+import 'package:bytebank/screens/home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() => runApp(BytebankApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  runApp(BytebankApp());
+}
 
 class BytebankApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(textTheme: GoogleFonts.interTextTheme()),
       debugShowCheckedModeBanner: false,
-      home: BytebankHomePage(),
+      home: AuthWrapper(), 
     );
   }
 }
 
-// Definindo as cores base
+class AuthWrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasData) {
+          return HomePage();
+        } else {
+          return BytebankHomePage();
+        }
+      },
+    );
+  }
+}
+
 const Color kBlack = Color(0xFF000000);
 const Color kGreen = Color(0xFF47A138);
-const Color kTeal  = Color(0xFF004D61);
+const Color kTeal = Color(0xFF004D61);
 const Color kWhite = Color(0xFFFFFFFF);
+const Color kGraw = Color(0xFF767676);
 
-class BytebankHomePage extends StatelessWidget {
+const double titleSize = 25;
+
+class BytebankHomePage extends StatefulWidget {
   const BytebankHomePage({Key? key}) : super(key: key);
+
+  @override
+  State<BytebankHomePage> createState() => _BytebankHomePageState();
+}
+
+class _BytebankHomePageState extends State<BytebankHomePage> {
+  bool _termosAceitos = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kWhite,
-      appBar: AppBar(
-        backgroundColor: kBlack,
-        title: Row(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            Icon(Icons.account_balance, color: kGreen),
-            const SizedBox(width: 8),
-            Text(
-              'Bytebank',
-              style: TextStyle(color: kGreen),
+            DrawerHeader(
+              decoration: BoxDecoration(color: kGreen),
+              child: Text(
+                'Menu Bytebank',
+                style: TextStyle(color: kWhite, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.info),
+              title: Text('Sobre'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.miscellaneous_services),
+              title: Text('Serviço'),
+              onTap: () {
+                Navigator.pop(context); 
+              },
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.menu, color: kWhite),
-            onPressed: () {},
+      ),
+      backgroundColor: kWhite,
+      appBar: AppBar(
+        backgroundColor: kBlack,
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: Icon(Icons.menu, color: kGreen),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+        title: Align(
+          alignment: Alignment.centerRight,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [Image.asset('../assets/images/Logo.png')],
           ),
-        ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Seção HERO (topo) com gradiente e wave
-            _buildHeroSection(),
-
-            // Vantagens do banco
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Vantagens do nosso banco:',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: kBlack,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildFeature(
-                    Icons.card_giftcard,
-                    'Conta e cartão gratuitos',
-                    'Isso mesmo, nossa conta é digital, sem custo fixo e mais: o saque é sem tarifa de manutenção.',
-                  ),
-                  _buildFeature(
-                    Icons.money_off,
-                    'Saques sem custo',
-                    'Você pode sacar gratuitamente 4x por mês de qualquer Banco 24h.',
-                  ),
-                  _buildFeature(
-                    Icons.star,
-                    'Programa de pontos',
-                    'Você pode acumular pontos com suas compras no crédito sem pagar mensalidade!',
-                  ),
-                  _buildFeature(
-                    Icons.security,
-                    'Seguro Dispositivos',
-                    'Seus dispositivos móveis protegidos por uma mensalidade simbólica.',
-                  ),
-                ],
-              ),
-            ),
-
-            // Rodapé preto
-            _buildFooter(),
-          ],
+          children: [_buildHeroSection(), _buildFooter()],
         ),
       ),
     );
@@ -101,30 +127,13 @@ class BytebankHomePage extends StatelessWidget {
   Widget _buildHeroSection() {
     return Stack(
       children: [
-        // Fundo em gradiente
         Container(
-          height: 340,
+          height: 700,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                kTeal,
-                kGreen,
-              ],
-            ),
-          ),
-        ),
-        // Onda branca na parte de baixo
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: ClipPath(
-            clipper: WaveClipper(),
-            child: Container(
-              height: 50,
-              color: kWhite,
+              colors: [kTeal, kWhite],
             ),
           ),
         ),
@@ -138,24 +147,28 @@ class BytebankHomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 30),
-                // Texto principal
                 Text(
-                  'Experimente mais liberdade no controle da sua vida financeira.\nCrie sua conta com a gente!',
+                  'Experimente mais liberdade no controle da sua vida financeira. Crie sua conta com a gente!',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: kWhite,
-                    fontSize: 18,
+                    color: kBlack,
+                    fontSize: titleSize,
                     fontWeight: FontWeight.bold,
+                    fontFamily: 'Inter',
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // Botões de ação
+                Center(
+                  child: Image.asset('../assets/images/ilustracao_banner.png'),
+                ),
+                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _abrirModalCadastro(context);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: kBlack,
                         padding: const EdgeInsets.symmetric(
@@ -173,7 +186,9 @@ class BytebankHomePage extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _abrirModalLogin(context);
+                      },
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: kBlack),
                         padding: const EdgeInsets.symmetric(
@@ -191,6 +206,46 @@ class BytebankHomePage extends StatelessWidget {
                     ),
                   ],
                 ),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Center(
+                        child: Text(
+                          'Vantagens do nosso banco:',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: kBlack,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildFeature(
+                        '../assets/images/icone_presente.png',
+                        'Conta e cartão gratuitos',
+                        'Isso mesmo, nossa conta é digital, sem custo fixo e mais: o saque é sem tarifa de manutenção.',
+                      ),
+                      _buildFeature(
+                        '../assets/images/icone_saque.png',
+                        'Saques sem custo',
+                        'Você pode sacar gratuitamente 4x por mês de qualquer Banco 24h.',
+                      ),
+                      _buildFeature(
+                        '../assets/images/icone_pontos.png',
+                        'Programa de pontos',
+                        'Você pode acumular pontos com suas compras no crédito sem pagar mensalidade!',
+                      ),
+                      _buildFeature(
+                        '../assets/images/icone_dispositivos.png',
+                        'Seguro Dispositivos',
+                        'Seus dispositivos móveis protegidos por uma mensalidade simbólica.',
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -199,33 +254,36 @@ class BytebankHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeature(IconData icon, String title, String description) {
+  void _abrirModalCadastro(BuildContext context) {
+    showDialog(context: context, builder: (context) => AbrirContaDialog());
+  }
+
+  void _abrirModalLogin(BuildContext context) {
+    showDialog(context: context, builder: (context) => LoginDialog());
+  }
+
+  Widget _buildFeature(String imagePath, String title, String description) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, color: kGreen, size: 30),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: kBlack,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  description,
-                  style: TextStyle(color: Colors.black87),
-                ),
-              ],
+          Image.asset(imagePath, width: 80, height: 80),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: kBlack,
             ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: kGraw),
           ),
         ],
       ),
@@ -241,10 +299,7 @@ class BytebankHomePage extends StatelessWidget {
         children: [
           Text(
             'Serviços',
-            style: TextStyle(
-              color: kWhite,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: kWhite, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           Text('Conta corrente', style: TextStyle(color: kWhite)),
@@ -253,10 +308,7 @@ class BytebankHomePage extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             'Contato',
-            style: TextStyle(
-              color: kWhite,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: kWhite, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           Text('0800 004 256 08', style: TextStyle(color: kWhite)),
@@ -278,43 +330,4 @@ class BytebankHomePage extends StatelessWidget {
       ),
     );
   }
-}
-
-// Clipper para criar a onda branca no final do topo
-class WaveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    Path path = Path();
-    path.lineTo(0, 0);
-    path.lineTo(0, size.height - 30);
-
-    // Primeira curva
-    var firstControlPoint = Offset(size.width * 0.25, size.height);
-    var firstEndPoint = Offset(size.width * 0.5, size.height - 20);
-    path.quadraticBezierTo(
-      firstControlPoint.dx,
-      firstControlPoint.dy,
-      firstEndPoint.dx,
-      firstEndPoint.dy,
-    );
-
-    // Segunda curva
-    var secondControlPoint = Offset(size.width * 0.75, size.height - 40);
-    var secondEndPoint = Offset(size.width, size.height - 10);
-    path.quadraticBezierTo(
-      secondControlPoint.dx,
-      secondControlPoint.dy,
-      secondEndPoint.dx,
-      secondEndPoint.dy,
-    );
-
-    path.lineTo(size.width, size.height);
-    path.lineTo(size.width, 0);
-    path.close();
-
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

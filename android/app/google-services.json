@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1046846285690",
+    "project_id": "tech-challenge-b9efc",
+    "storage_bucket": "tech-challenge-b9efc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046846285690:android:61cf4ecd3a8919eb8f98c3",
+        "android_client_info": {
+          "package_name": "com.example.bytebank"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDevdYlWcUlU0YLCwwm86D74TcssNqYmXY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

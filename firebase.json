@@ -1,0 +1,49 @@
+{
+  "emulators": {
+    "dataconnect": {
+      "dataDir": "dataconnect/.dataconnect/pgliteData"
+    }
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "tech-challenge-b9efc",
+          "appId": "1:1046846285690:android:61cf4ecd3a8919eb8f98c3",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "tech-challenge-b9efc",
+          "configurations": {
+            "android": "1:1046846285690:android:61cf4ecd3a8919eb8f98c3",
+            "ios": "1:1046846285690:ios:189c5fcf0af5eafe8f98c3",
+            "macos": "1:1046846285690:ios:189c5fcf0af5eafe8f98c3",
+            "web": "1:1046846285690:web:1e2ec08e70619b818f98c3",
+            "windows": "1:1046846285690:web:1da290e1d3e3e6878f98c3"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+
+      ]
+    }
+  ]
+}
