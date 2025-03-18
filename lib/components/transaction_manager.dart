@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const Color kTeal = Color(0xFF004D61);
 const Color kGreen = Color(0xFF47A138);
@@ -15,6 +18,7 @@ void openTransactionModal(
   showDialog(
     context: context,
     builder: (BuildContext context) {
+
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
@@ -35,15 +39,18 @@ void openTransactionModal(
                     ),
                     onChanged: (query) {
                       setState(() {
-                        filteredTransactions = transactions
-                            .where((transaction) =>
-                                transaction["type"]
-                                    .toLowerCase()
-                                    .contains(query.toLowerCase()) ||
-                                transaction["date"]
-                                    .toLowerCase()
-                                    .contains(query.toLowerCase()))
-                            .toList();
+                        filteredTransactions =
+                            transactions
+                                .where(
+                                  (transaction) =>
+                                      transaction["type"]
+                                          .toLowerCase()
+                                          .contains(query.toLowerCase()) ||
+                                      transaction["date"]
+                                          .toLowerCase()
+                                          .contains(query.toLowerCase()),
+                                )
+                                .toList();
                       });
                     },
                   ),
@@ -51,48 +58,51 @@ void openTransactionModal(
               ],
             ),
             content: SizedBox(
-              width: 400, 
+              width: 400,
               height: 400,
               child: SingleChildScrollView(
                 child: Column(
-                  children: filteredTransactions.isEmpty
-                      ? [
-                          const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Text("Nenhuma transação encontrada."),
-                          )
-                        ]
-                      : filteredTransactions.map((transaction) {
-                          return ListTile(
-                            title: Text(
-                              "${transaction["type"]} - R\$ ${transaction["value"]}",
+                  children:
+                      filteredTransactions.isEmpty
+                          ? [
+                            const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Text("Nenhuma transação encontrada."),
                             ),
-                            subtitle: Text(transaction["date"]),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: kTeal),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    editTransactionDialog(
-                                      context,
-                                      transaction,
-                                      refreshUI,
-                                    );
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
-                                  onPressed: () {
-                                    deleteTransaction(transaction, refreshUI);
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                          ]
+                          : filteredTransactions.map((transaction) {
+                            return ListTile(
+                              title: Text(
+                                "${transaction["type"]} - R\$ ${transaction["value"]}",
+                              ),
+                              subtitle: Text(transaction["date"]),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: kTeal),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      editTransactionDialog(
+                                        context,
+                                        transaction,
+                                        refreshUI,
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () {
+                                      deleteTransaction(transaction, refreshUI);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                 ),
               ),
             ),
@@ -103,7 +113,6 @@ void openTransactionModal(
   );
 }
 
-
 void editTransactionDialog(
   BuildContext context,
   Map<String, dynamic> transaction,
@@ -113,6 +122,10 @@ void editTransactionDialog(
     text: transaction["value"].toString(),
   );
   String selectedType = transaction["type"];
+  String? attachmentUrl = transaction["attachment"];
+
+  print('transaction');
+  print(transaction);
 
   showDialog(
     context: context,
@@ -124,19 +137,20 @@ void editTransactionDialog(
           children: [
             DropdownButton<String>(
               value: selectedType,
-              items: [
-                "Empréstimo",
-                "Meus cartões",
-                "Doações",
-                "Pix",
-                "Seguros",
-                "Crédito celular",
-              ].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
+              items:
+                  [
+                    "Empréstimo",
+                    "Meus cartões",
+                    "Doações",
+                    "Pix",
+                    "Seguros",
+                    "Crédito celular",
+                  ].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
               onChanged: (value) {
                 selectedType = value!;
               },
@@ -146,6 +160,13 @@ void editTransactionDialog(
               decoration: const InputDecoration(labelText: "Valor"),
               keyboardType: TextInputType.number,
             ),
+
+            const SizedBox(height: 16),
+
+            if (attachmentUrl != null && attachmentUrl.isNotEmpty)
+              kIsWeb
+                  ? _openPdfWeb(attachmentUrl)
+                  : _openPdfMobile(attachmentUrl), 
           ],
         ),
         actions: [
@@ -169,6 +190,25 @@ void editTransactionDialog(
       );
     },
   );
+}
+
+Widget _openPdfWeb(String url) {
+  return TextButton.icon(
+    icon: const Icon(Icons.open_in_new, color: Colors.blue),
+    label: const Text("Abrir Anexo"),
+    onPressed: () async {
+      Uri uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        debugPrint("Erro ao abrir o anexo.");
+      }
+    },
+  );
+}
+
+Widget _openPdfMobile(String url) {
+  return SizedBox(height: 400, child: PDFView(filePath: url));
 }
 
 void updateTransaction(

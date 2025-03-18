@@ -7,7 +7,7 @@ class TransactionHistory extends StatefulWidget {
   final VoidCallback refreshUI;
 
   const TransactionHistory({Key? key, required this.refreshUI})
-      : super(key: key);
+    : super(key: key);
 
   @override
   _TransactionHistoryState createState() => _TransactionHistoryState();
@@ -55,27 +55,35 @@ class _TransactionHistoryState extends State<TransactionHistory> {
       if (snapshot.exists && snapshot.value != null) {
         final data = snapshot.value as Map<dynamic, dynamic>;
 
-        List<Map<String, dynamic>> fetchedTransactions = data.entries
-            .map((entry) => Map<String, dynamic>.from(entry.value))
-            .where((transaction) => transaction["userId"] == uid)
-            .map((transaction) {
-          return {
-            "id": transaction["id"] ?? "",
-            "date": _formatDate(transaction["date"] ?? ""),
-            "method": transaction["method"] ?? "Desconhecido",
-            "type": transaction["type"] ?? "Transação",
-            "value": transaction["value"] ?? 0,
-            "isDeposit": (transaction["value"] ?? 0) >= 0,
-          };
-        }).toList();
+        List<Map<String, dynamic>> fetchedTransactions =
+            data.entries
+                .map((entry) => Map<String, dynamic>.from(entry.value))
+                .where((transaction) => transaction["userId"] == uid)
+                .map((transaction) {
+                  return {
+                    "id": transaction["id"] ?? "",
+                    "date": _formatDate(transaction["date"] ?? ""),
+                    "method": transaction["method"] ?? "Desconhecido",
+                    "type": transaction["type"] ?? "Transação",
+                    "value": transaction["value"] ?? 0,
+                    "isDeposit": (transaction["value"] ?? 0) >= 0,
+                    "attachment":
+                        transaction["attachment"] ?? "", 
+                  };
+                })
+                .toList();
 
         fetchedTransactions.sort((a, b) => b["date"].compareTo(a["date"]));
 
         int startIndex = currentPage * itemsPerPage;
         int endIndex = startIndex + itemsPerPage;
-        List<Map<String, dynamic>> newTransactions =
-            fetchedTransactions.sublist(
-                startIndex, endIndex > fetchedTransactions.length ? fetchedTransactions.length : endIndex);
+        List<Map<String, dynamic>> newTransactions = fetchedTransactions
+            .sublist(
+              startIndex,
+              endIndex > fetchedTransactions.length
+                  ? fetchedTransactions.length
+                  : endIndex,
+            );
 
         setState(() {
           transactions.addAll(newTransactions);
@@ -111,7 +119,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
       padding: const EdgeInsets.all(16.0),
       child: Container(
         width: double.infinity,
-        height: 480, 
+        height: 480,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -150,80 +158,80 @@ class _TransactionHistoryState extends State<TransactionHistory> {
             ),
             const SizedBox(height: 10),
             Expanded(
-              child: transactions.isEmpty && isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : transactions.isEmpty
+              child:
+                  transactions.isEmpty && isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : transactions.isEmpty
                       ? Center(
-                          child: Text(
-                            "Nenhuma transação encontrada.",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                            ),
+                        child: Text(
+                          "Nenhuma transação encontrada.",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade700,
                           ),
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          itemCount: transactions.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == transactions.length) {
-                              return hasMore
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: Center(
-                                          child: CircularProgressIndicator()),
-                                    )
-                                  : const SizedBox.shrink();
-                            }
-
-                            final transaction = transactions[index];
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  transaction["type"],
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      transaction["method"],
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                    Text(
-                                      transaction["date"],
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "R\$ ${transaction["value"]}",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: transaction["type"] == "Depósito"
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
-                                const Divider(
-                                  color: Colors.green,
-                                  thickness: 1,
-                                ),
-                              ],
-                            );
-                          },
                         ),
+                      )
+                      : ListView.builder(
+                        controller: _scrollController,
+                        itemCount: transactions.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == transactions.length) {
+                            return hasMore
+                                ? const Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                                : const SizedBox.shrink();
+                          }
+
+                          final transaction = transactions[index];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                transaction["type"],
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    transaction["method"],
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  Text(
+                                    transaction["date"],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "R\$ ${transaction["value"]}",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      transaction["type"] == "Depósito"
+                                          ? Colors.green
+                                          : Colors.red,
+                                ),
+                              ),
+                              const Divider(color: Colors.green, thickness: 1),
+                            ],
+                          );
+                        },
+                      ),
             ),
           ],
         ),
